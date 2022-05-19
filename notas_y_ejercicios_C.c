@@ -5,6 +5,8 @@
 #include <limits.h>
 #include <math.h>
 #include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 /*LosComentarios se hacen con ""//""  o  /*"comentario"*/ 
 /* El primero se utiliza para comentarios en una sola línea y el segundo se utiliza para párrafos de comentarios.*/
@@ -1993,7 +1995,169 @@ return 0;
 }
 */
 
-/*STRUCTS (ESTRUCTURAS) EN C: Es la forma de crear nuevas estructuras de datos en C, es decir nuevas formas de  estructurar y manipular los datos
- * en variables de tipos creadas por uno mismo,   
+/*STRUCTS (ESTRUCTURAS) EN C: Es la forma de crear nuevas estructuras de datos en C, es decir nuevas formas de estructurar y 
+ * manipular los datos en variables de tipos creadas por uno mismo. Structs sirven para guardar datos de varias variables de 
+ * tipos distintos y manipularlas, esto sirve para no tener que usar cientos de variables y estarlas cambiando una por una constantemente.
+ * Esto salva mucho tiempo, pero este no es su único propósito.
  *
+ * Las estructuras se declaran de la siguiente forma:
+ *
+ * (typedef) struct struct_tag{
+ *      type1 variable_1;
+ *      type2 variable_2;
+ *      type3 variable_3;
+ *      .
+ *      .
+ *      . 
+ *      type_n variable_n;
+ * } struct_variable_name_1, struct_variable_name_2,...,struct_variable_name_k;
+ *
+ * Si queremos acceder a una variable en particular de un struct en particular y declarar o modificar un valor, esto lo 
+ * podemos hacer utilizando el operador "." (punto):
+ *
+ * struct_variable_name_j.variable_i = value;
+ *
+ * Notamos que la "structure tag" en esencia nos genera un nuevo tipo de datos que nosotros hemos creado, estos tipos de
+ * datos siguien la misma lógica de memoria que las variables usuales, es decir que su scope de memoria local/global depende 
+ * de si es declarada en una función (local scope) o fuera de las fuciones (global scope).
+ * Si se ecribe typedef antes de la declaración de una estructura nueva, esto en C quiere decir que estamos definiendo un
+ * nuevo tipo de dato con ciertas características de un struct, así podemos declarar nuevos tipos de variebles con el struct type
+ * simplemente escribiendo
+ *
+ * struct_tag new_struct_var;
+ *
+ * Esto crea en memoria una nueva variable del tipo que hemos creado y con esto podemos modificar su propiedades como hemos visto
+ * anteriormente. Si no se utiliza el token typedef cada que se declara una variable de nuestra estructura nueva se tiene que declarar
+ * como:
+ *
+ * struct struct_tag variable_name[n]; \\n es el número de variables en la estructura.
+ *
+ * NOTA: Al momento de declarar una structura no podemos asignar sus valores, esto sólo lo podemos hacer después de iniciar 
+ * una struct en memoria. Otra cosa que hay que notar es que podemos usar la notación de los arreglos:
+ * 
+ * struct_tag struct_variable_name = {value_1,...,value_n};
+ *
+ * Otra forma que combina las dos maneras es
+ *
+ * struct_tag struct_variable_name = {.variable_1 = value_1,variable_2 = value_2,...,.variable_n  = value_n};
+ *
+ * Ejemplo:
 */ 
+
+/*
+//CODIGO de generación de cuantas bancarias
+struct account{ //estructura de cuanta bancaria.
+        char name[50];
+        char surname[50];
+        long int tokenid;
+        int balance;
+        int NIP;
+};
+
+//código reusado para generar números aleatorios, tiene sus comentarios originales en inglés
+long long int randomNumber(int numb,int min,int max){
+        int length = max - min;
+        if(length < 0){
+                puts("Error: Incorrect bounds for interval");
+                return 1;
+        }
+        long int PID = getpid();
+        long int tiem = time(NULL);
+        srand((PID + numb) + tiem);//function tha changes the random number seed.
+        long int randomValBounded = (rand() % length) + min;
+return randomValBounded;
+}
+
+unsigned long long int accountTokenGen(struct account* acc, int nip){//Función que toma como argumento un pointer a una struct, y regresa
+                                                       //un número generado con el valor de le las strings y el NIP.
+                                                       //Mencionamos que cuando se trabajan con funciones que toman valores en
+                                                       //strucs siempre es conveniente utilizar apuntadores a las structs en lugar
+                                                       //de las structs para no duplicar su memoria, similar a lo que sucede con
+                                                       //las arrays y strings.
+        if(nip == acc->NIP){ //Veremos más sobre apuntadores a structs el el futuro, perlo la notación struct_variable->variable_k
+                             //es como declaramos un apuntador a una variable de un struct.
+                char *epname = (acc->name)[50];
+                char *epsur = (acc->surname)[50];
+                unsigned long long ulvalname = strtoll(acc->name,&epname,16);//Esta funcion est[a declarada en stdlib.h y es para 
+                                                                             //transformar una string en un unsigned long long int
+                unsigned long long ulvalsur = strtoll(acc->name,&epsur,16);  //toma uns string y un apuntador al final de la string y
+                                                                             //la base en la que quieres tu número
+                unsigned long long int token;
+                unsigned long long int name_token;
+                unsigned long long int surname_token;
+                name_token=randomNumber(acc->NIP,1,100000) * ulvalname;
+                surname_token=randomNumber(acc->NIP,1,100000) * ulvalsur;
+                token= name_token * surname_token;
+                printf("Account token generated: %llx\n",token);
+                return token;
+        } else{
+                puts("Autentification Failed");
+                return 1;
+        }
+}
+void printAccount(struct account* acc, int nip){
+        if(nip == acc->NIP){
+                puts("************************************************************************************************");
+                printf("Account is registered to: %s %s\n", acc->name, acc->surname);
+                printf("With balance: $%d\n", acc->balance);
+                puts("************************************************************************************************");
+        }else{
+                puts("Autentification Failed");
+        }
+}
+int main()
+{
+        struct account cuenta;
+        printf("Enter your  first name:\n");
+        scanf("%s",&cuenta.name);
+        printf("Enter your surname:\n");
+        scanf("%s",&cuenta.surname);
+        printf("Create your nip:\n");
+        scanf("%d",&cuenta.NIP);
+        printf("Deposit money to your acount:\n");
+        scanf("%d",&cuenta.balance);
+        cuenta.tokenid = accountTokenGen(&cuenta, cuenta.NIP);
+        printAccount(&cuenta, cuenta.NIP);
+return 0;
+}
+*/
+
+/* POINTERS A ESTRUCTURAS: Como ya hemos dicho cuando tenemos un pointer a una structura (como en el caso de una función 
+* que toma éste como argumento), para acceder a los valores de las variables en la estructura, necesitamos hacer uso de
+* los operadores de desreferenciar, en el caso de las estructuras hay dos formas de hacer esto:
+*
+* 1. Operador flecha: struct_variable_name->variable_k;
+*
+* 2. Operador de desreferenciación: (*pointer_to_struct_variable_name).variable;
+*
+* Ahora algo de suma importancia que tenemos que entender antes de seguir utilizando pointers a structs es su capacidad en memoria,
+* es decir, si una variable struct puede almacenar la memoria de varios tipos de datos, entonces cuanta memoria ocupa una variable
+* de struct? Uno pensaría que sería la suma de la memoria almacenda por cada variable de la estructura pero NO. Esto es debido a
+* algo llamado "STRUCTURE PADDING" que quiere decir "relleno de estructura", esto se refiere al hecho de que el procesador no lee
+* un byte a la vez, si no que va leyendo una unidad de meoria o palabra a la vez, esto depende del procesador al cual estamos 
+* compilando las instrucciones, en el caso de procesadores de 32 bits, estos son capaces de leer 4 bytes y en uno de 64 bits 
+* son 8 bytes, ahora el tamaño de memoria que puede leer un procesador por ciclo depende de su aquitectura (ARM, RISC-V, x86 etc).
+* Así "structure padding" quiere decir que el compilador va llenar los espacios faltantes de la memoria de las variables una estructura
+* para aprovechar ciclos del CPU al accesar dicha memoria, al rellenar esta memoria quiere decir que por ejemplo en una arquitectura
+* de 32 bits, en una estructura un caracter "char" puede usar hasta 4 bytes en lugar de 1 para ser guardada en memoria, la cantidad
+* depende de en qué orden se declaren en la estructura las variables. Por ejemplo si se declara una estructura con 2 caracteres al principio
+* luego de un entero, en un arquitectura de 32bits, el compilador va a tomar 2 bytes para los caracteres 2 bytes para ahorrar ciclos
+* y 4 bytes para el entero, así una variable de esta estuctura ocupará 8 bytes, sin embargo si se declara 1 caracter luego un entero y luego 
+* otro caracter, en esta caso se utiliza 4 bytes para el primer caracter, 4 bytes para el entero y otros 4 bytes para el el 
+* otro caracter, asi una variable struct en este caso (que guarda la misma cantidad de memoria) utiliza 12 bytes.
+* Hay que recordar que la memoria se guarda de forma LINEAL y el compilador prefiere desperdiciar memoria a ciclos del procesador.
+*/
+
+/* #pragma: Una forma de evitar que all compilar hagamos "structure padding" es usar #pragma, esto es una orden para el preprocesador
+* que indica que se requiere hacer una accion dependiente de la implementacion (es decir dependiente de el hardware al que vamos a compilar)
+* por lo general un #pragma es alguun tipo de dependencia de biblioteca externa al momento de compilar, se declara de la siguiente manera
+*
+* #pragma GCC dependency "/usr/include/time.h" esto agrega la dependencia de el archivo time.h.
+*
+* Vermos mas sobre esto en el futuro, pero por el momento si deseamos que las structs no tengan "STRUCTURE PADDING", usamos 
+* 
+* #pragama pack(1) 
+*
+* Esto indica que queremos usar stucture packing es decir no desperdiciar memoria para salvar ciclos y preferimos salvar
+* memoria a costa de ciclos.
+*/

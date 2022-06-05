@@ -1,5 +1,6 @@
 /* NOTAS y EJERCICIOS EN C*/
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
@@ -2002,7 +2003,7 @@ return 0;
  *
  * Las estructuras se declaran de la siguiente forma:
  *
- * (typedef) struct struct_tag{
+ *struct struct_tag{
  *      type1 variable_1;
  *      type2 variable_2;
  *      type3 variable_3;
@@ -2023,6 +2024,10 @@ return 0;
  * Si se ecribe typedef antes de la declaración de una estructura nueva, esto en C quiere decir que estamos definiendo un
  * nuevo tipo de dato con ciertas características de un struct, así podemos declarar nuevos tipos de variebles con el struct type
  * simplemente escribiendo
+ *
+ * typedef struct{
+ *  //Codigo de la struct
+ * } struct_tag;
  *
  * struct_tag new_struct_var;
  *
@@ -2160,4 +2165,245 @@ return 0;
 *
 * Esto indica que queremos usar stucture packing es decir no desperdiciar memoria para salvar ciclos y preferimos salvar
 * memoria a costa de ciclos.
+*/
+
+/*UNIONS: Otra forma de definir tipos de datos propios en C pero a direrencia de la estructuras, las uniones tienen la particularidad
+* de que comparten la misma localidad de memoria, es decir en cada variable definida de la union(variable interna de la union), cada localidad de memoria es
+* la misma en lugar de una distinta por variable. Esto implica que la memoria usada por una union corresponde a la memoria utilizada por
+* el bloque más grande y todos los miembros ocupan dicha memoria, por lo cual si escribimos un dato en el miembro más grande esto escribirá
+* datos en todas las variables y al accesar los datos en meoria de estos miembros obtendremos el valor asociado al valor de
+* la variable más grande pero porsiblemente interpretado como otro tipo de dato. Por ejemplo si tenemos una union con un char y un int,
+* al escribir el valor 65, el valor de char se va a escribir con el mismo valor, que en ascii es "A".
+* La notación que se utiliza la uniones es sacamente la misma que los structs, incluyendo los operadores .,-> lo unico que cambia 
+* es usar union en lugar de struct.
+*
+*
+* union union_tag{
+*      type1 variable_1;
+*      type2 variable_2;
+*      type3 variable_3;
+*      .
+*      .
+*      . 
+*      type_n variable_n;
+* } union_variable_name_1, union_variable_name_2,...,union_variable_name_k;
+*
+* typedef union{
+*  //Codigo de la union
+* } union_tag;
+*
+* union_tag union_variable_name = {value_1,...,value_n};
+*
+* union_tag union_variable_name = {.variable_1 = value_1,variable_2 = value_2,...,.variable_n  = value_n};
+*
+* Operador flecha: union_variable_name->variable_k;
+*
+* Operador de desreferenciación: (*pointer_to_union_variable_name).variable;
+*
+* Ejemplo de como podemos salvar memoria usando unions:
+*/
+
+/*
+#pragma pack(1)
+
+typedef struct {
+        char* device;
+        float version;
+        int memory;
+} software;
+
+typedef struct{
+        int iotypes[3];
+        char* effect;
+} hardware;
+
+typedef struct{
+        int capacity;
+        int type; 
+}weapon;
+
+typedef struct {
+        float price;
+        char* name;
+        bool isforRobots;
+        int identifier;
+        union{
+                software program;
+                hardware device;
+                weapon armament;
+        };
+} items;
+
+typedef struct{
+        int numberOfitems;
+        char* nameOfstore;
+        items inventory[];
+} store;
+
+typedef struct{
+        char* name;
+        bool isrobot;
+        union{
+                char* personality;
+                float firmware_version;
+        };
+}npc;
+
+void cpitem(items* copyitem,items* sourceitem){
+        copyitem->price=sourceitem->price;
+
+        size_t namesize=strlen(sourceitem->name)+1;
+        copyitem->name=(char*)malloc(namesize);
+        strncpy(copyitem->name,sourceitem->name,namesize);
+
+        copyitem->isforRobots=sourceitem->isforRobots;
+
+        copyitem->identifier=sourceitem->identifier;
+        if(copyitem->identifier == 1){
+                size_t programdevsize = strlen(sourceitem->program.device)+1;
+                copyitem->program.device=(char*)malloc(programdevsize);
+                strcpy(copyitem->program.device,sourceitem->program.device);
+
+                copyitem->program.version=sourceitem->program.version;
+                
+                copyitem->program.memory=sourceitem->program.memory;
+        }else if(copyitem->identifier == 2){
+                copyitem->device.iotypes[0]=sourceitem->device.iotypes[0];
+                copyitem->device.iotypes[1]=sourceitem->device.iotypes[1];
+                copyitem->device.iotypes[2]=sourceitem->device.iotypes[2];
+
+                size_t deveffsize=strlen(sourceitem->device.effect)+1;
+                copyitem->device.effect=(char*)malloc(deveffsize);
+                strcpy(copyitem->device.effect,sourceitem->device.effect);
+        }else{
+                copyitem->armament.capacity=sourceitem->armament.capacity;
+                copyitem->armament.type=sourceitem->armament.type;
+        }       
+}
+store *createStore(store* s,char* namestore, int numberitems, items inventory[]){
+        size_t strsize=strlen(namestore)+1;
+        size_t size = sizeof(store)+sizeof(items)*numberitems;
+        s=malloc(size);
+        s->numberOfitems = numberitems;
+        s->nameOfstore=(char*)malloc(strsize);
+        strcpy(s->nameOfstore,namestore);
+        for(size_t i = 0; i < numberitems; i++){
+                items* itemptr = &s->inventory[i];
+                cpitem(itemptr,(inventory + i));
+        }
+        return s;
+}
+
+void storeoptions(npc* character, store* str){
+        if(character->isrobot)
+        {
+                puts("**************************************************************************************************");
+                printf("Welcome! to the %s the best store for robots of firmware version %.2f\n", str->nameOfstore ,character->firmware_version);
+                puts("**************************************************************************************************");
+                puts("Please select one of the following items:");
+                        for(size_t i = 0;i < str->numberOfitems;i++){
+                                if (str->inventory[i].isforRobots){
+                                        if(str->inventory[i].identifier==1){
+                                                printf("%.2f Zi   %s, ver %.3f for %s, %d MB memory needed.\n",
+                                                str->inventory[i].price,
+                                                str->inventory[i].name,
+                                                str->inventory[i].program.version,
+                                                str->inventory[i].program.device,
+                                                str->inventory[i].program.memory);
+                                        }else if(str->inventory[i].identifier==2){
+                                                printf("%.2f Zi   %s for sockets of type %d %d %d, gives %s.\n",
+                                                str->inventory[i].price,
+                                                str->inventory[i].name,
+                                                str->inventory[i].device.iotypes[0],
+                                                str->inventory[i].device.iotypes[1],
+                                                str->inventory[i].device.iotypes[2],
+                                                str->inventory[i].device.effect);
+                                        }
+                                }
+                        }
+        }
+        else
+        {
+        puts("**************************************************************************************************");
+        printf("Welcome! to the %s the best store for weapons,hardware and software\n",str->nameOfstore);
+        puts("**************************************************************************************************");
+        puts("Please select one of the following items:");
+                for(size_t i = 1;i < str->numberOfitems + 1;i++){
+                        if(str->inventory[i].identifier==1){
+                                printf("%.2f Zi   %s, ver %.3f for %s, %d MB memory needed.\n",
+                                str->inventory[i].price,
+                                str->inventory[i].name,
+                                str->inventory[i].program.version,
+                                str->inventory[i].program.device,
+                                str->inventory[i].program.memory);
+                        }
+                        if(str->inventory[i].identifier==2){
+                                printf("%.2f Zi   %s for sockets of type %d %d %d, gives %s.\n",
+                                str->inventory[i].price,
+                                str->inventory[i].name,
+                                str->inventory[i].device.iotypes[0],
+                                str->inventory[i].device.iotypes[1],
+                                str->inventory[i].device.iotypes[2],
+                                str->inventory[i].device.effect);
+                        }
+                }
+        }
+        printf("\n");
+}
+
+void printCharacter(npc* character){
+        printf("Character name: %s\n",character->name);
+        if(character->isrobot){
+                printf("Version: %.2f\n",character->firmware_version);
+        }else{
+                printf("Personality: %s\n", character->personality);
+        }
+        printf("\n");
+}
+
+int main()
+{       
+        hardware charger={{1,5,7},"Gives a small charge of energy"};
+        weapon bullets={5,0};
+        hardware processor={{1,2,3},"Ultra fast processing unit."};
+        weapon shotgun={10,2};
+        hardware tvisor={{2,7,9}, "Gives the ability to see heat siganture."};
+        weapon handgun={20,1};
+        software program1={"Console",5.67,760};
+        software script={"Console",2.29,57};
+        store generalStore;
+        items storeitems[8]={
+                        {89.99,"Fast injection script",true,1,.program = script},
+                        {69.99,"Memory erraising program",false,1,.program = program1},
+                        {15.50,"Handgun",false,3,.armament = handgun},
+                        {30.00,"Thermal visor",true,2,.device = tvisor},
+                        {45.00,"Shotgun",false,3,.armament = shotgun},
+                        {99.99,"Ultra fast AMD procesor unit",true,2,.device = processor},
+                        {5.00,"5mm bullets",false,3,.armament = bullets},
+                        {4.99,"Small energy charger",true,2,.device = charger}
+                };
+
+        store* ptrStore=createStore(&generalStore,"McPapu Great Hardware, Software and Gun Store",8,storeitems);
+        npc gatsu={"Guts The Immortal Robot",.isrobot=true,.firmware_version=8.76};
+        printCharacter(&gatsu);
+        storeoptions(&gatsu,ptrStore);
+        npc rogier={"Rogier The Sage Wizard",.isrobot=false,.personality="Charismatic"};
+        printCharacter(&rogier);
+        storeoptions(&rogier,ptrStore);
+        return 0;
+}
+*/
+
+/*ENUMS (Enumeracion): Es otro tipo de datos que podemos definir, pero en este caso sólo se utilizan para asignar nombres a constantes enteras.
+* Un ejemplo sencillo es el caso de la implentacion los booleanos 0 y 1.
+*
+* enum Bool {True, False};
+*
+* Similar a las estructuras y uniones es posible usar typedef. Si no especificamos el valor de los nombres de las constantes, el compilador 
+* automáticamente asinga los valores aumentando por uno y comenzando por 0. Si se quiere usar solo ciertos numeros en concreto, se declara 
+* de la foram
+*
+* enum myEnum = {const_1=valule_1,...,const_k=value_k}
+*
+* A diferencia de #define es posible definir enums en la memoria local
 */

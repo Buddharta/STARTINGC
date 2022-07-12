@@ -251,8 +251,8 @@ else if( age == 18 )
 */
 
 /* #DEFINE (NO USAR"";"" CON #DEFINE)
-* Nos permite definir constantes,macros y hasta funciones en el código para ser llamadas por funciones sin tener que definir su valor cada que se utilicen
-* en una funcion.
+* Nos permite definir constantes,macros y hasta funciones en el código para ser llamadas por funciones sin tener que 
+* definir su valor cada que se utilicen en una funcion.
 * Ejemplo:
 */
 
@@ -2406,4 +2406,31 @@ int main()
 * enum myEnum = {const_1=valule_1,...,const_k=value_k}
 *
 * A diferencia de #define es posible definir enums en la memoria local
+*/
+
+/* IF/IFDEF/ERROR/PRAGMA/UNDEFINE (Preprocesador): Ya hemos visto previamente #define, #include y #pragma pack(1), estas son 
+* instrucciones al preprocesador. El preprocesaror es una parte de el compilador que nos permite ajustar la compilación de 
+* nuestro programa según lo necesitemos, algunas de estas instrucciones son las siguientes:
+*
+* #include "file.h" - Le dice al preprcesador que incluya al archivo file.h como archivo de cabecera.
+*
+* #define MACRO - Define un macro como previamente vimos
+*
+* #undefine MACRO - Hace que deje de ser valindo cierto macro
+*
+* #pragama - Da cierta información al compilador para ejeceutar ciertas acciones como:
+* pack(1)  - para que el compilador no empaque la memoria de las estructuras
+* error    - para que el compilador mande una señal de error
+* warning  - para que el compilador mando una señal de alerta
+*
+* #if/#else/#elif/#ifdef/ifndef - Son condicinales que funcionan la momento de compilación y no al momento de ejecución como los
+*                                 condicionales usuales, estos dan condiciones para que según lo que se tenga definido, se compile o 
+*                                 no cierta parte del código.
+* Ej: #define PREMIUN
+*
+*  #if defined(PREMIUM)
+*  //Compila la verion premium
+*  #else
+*  //Compila la versión no premium
+*  NOTA: #ifdef=#if defined, #ifndef es para saber si sucede la negación de la condición.
 */

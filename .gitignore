@@ -1,11 +1,4 @@
 .vscode
-amstrong_number_checker
-binary_to_decimal
-bubblesort
-collatz
-ejercicios
-gitignore.sh
-notas_y_ejercicios_C
-sierpinsky
-sort
-test
+*.o
+*.out
+*.exe
